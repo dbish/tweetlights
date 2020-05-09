@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+	<h1 class="display-4">TweetLights</h1>
+	<p class="lead">Curate your best tweets in a single place</p>
+	<hr class="my-4">
+	<p>You tweet a lot, and potential followers need a quick way to get up to speed on who you are. Build your tweetlight profile here, highlighting your favorite or most liked tweets!</p>
+	<a href="{{url_for('twitter.login')}}">
+		<img alt="sign in with Twitter" src="{{url_for('static', filename='twitterbutton.png')}}">
+	</a>
+</div>
+{% endblock %}

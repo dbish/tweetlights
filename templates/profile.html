@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static', filename='profile.css')}}">
+<script src="{{url_for('static', filename='transferUpdates.js')}}"></script>
+<script src="{{url_for('static', filename='loadTweets.js')}}"></script>
+<script>window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));</script>
+<script src="{{url_for('static', filename='getTweet.js')}}"></script>
+<div class="container">
+	<div class="row">
+		<h1>@{{screen_name}}</h1>
+	</div>
+	<div class="row">
+		<div class="col">
+			<h2>Profile Highlights</h2>
+			<button onclick="saveHighlights()" type="button" class="btn btn-primary">Save</button>
+			<div id="tweets">
+			</div>
+		</div>
+		<div class="col">
+			<h2>Search by ID</h2>
+			<div class="input-group mb-3">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="basic-addon3">twitter.com/{{screen_name}}/status/</span>
+				</div>
+				<input type="text" class="form-control" id="tweetID" aria-describedby="basic-addon3">
+				<div class="input-group-append">
+				<button onclick="getTweet()" type="button" class="btn btn-primary">Add</button>
+				</div>
+			</div>
+			<div id="searchTweet">
+			</div>
+			<h2>Browse Recent Tweets</h2>
+			<button onclick="getMoreTweets()" type="button" class="btn btn-primary">More tweets!</button>
+			<div id="previousTweets">
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

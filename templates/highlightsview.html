@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static', filename='profile.css')}}">
+<script>window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));</script>
+<script src="{{url_for('static', filename='getCollection.js')}}"></script>
+<div class="container">
+	<div class="row">
+		<h1>@{{screen_name}}</h1>
+	</div>
+	<div>
+		<div class="twitter-timeline" collectionID="{{collection_id}}" id="highlights" href="https://twitter.com/{{screen_name}}/timelines/{{collection_id}}">
+		</div>
+	</div>
+</div>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:site" content="@tweetlights"/>
+<meta name="twitter:title" content="See {{screen_name}} curated highlights"/>
+<meta name="twitter:description" content="view on tweetlights.com"/>
+<meta name="twitter:image" content="https://api.miniature.io/?url=http://ec2-54-188-110-37.us-west-2.compute.amazonaws.com/diamondbishop"/>
+{% endblock %}
