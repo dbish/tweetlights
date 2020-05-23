@@ -20,13 +20,16 @@
   return t;
 }(document, "script", "twitter-wjs"));</script>
 <script src="{{url_for('static', filename='getTweet.js')}}"></script>
+<script>
+	var startingTweets = {{ tweets|tojson}};
+</script>
 <div class="container">
 	<div class="row">
 		<h1>@{{screen_name}}</h1>
 	</div>
 	<div class="row">
 		<div class="col">
-			<h2>Profile Highlights</h2>
+			<h2>Your Profile Highlights</h2>
 			<button onclick="saveHighlights()" type="button" class="btn btn-primary">Save</button>
 			<div id="tweets">
 			</div>
@@ -44,10 +47,14 @@
 			</div>
 			<div id="searchTweet">
 			</div>
-			<h2>Browse Recent Tweets</h2>
-			<button onclick="getMoreTweets()" type="button" class="btn btn-primary">More tweets!</button>
+			<h2>Browse</h2>
+			<button onclick="sortByRetweets()" type="button" class="btn btn-primary">Retweets</button>
+			<button onclick="sortByFavorites()" type="button" class="btn btn-primary">Favorites</button>
+			<button onclick="sortByRecency()" type="button" class="btn btn-primary">Recency</button>
 			<div id="previousTweets">
 			</div>
+			<button onclick="getPrevTweets()" type="button" class="btn btn-primary">Prev</button>
+			<button onclick="getNextTweets()" type="button" class="btn btn-primary">Next</button>
 		</div>
 	</div>
 </div>

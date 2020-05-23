@@ -48,7 +48,8 @@ function highlight(e){
 
 	} else {
 		highlights.add(tweetID);
-		var tweet = $('#wrapper-'+tweetID).clone();
+		//var tweet = $('#wrapper-'+tweetID).clone();
+		var tweet = $(createProfileTweet(tweetID));
 		var newID = 'wrapper-'+tweetID+'-highlighted';
 		tweet.attr('id', newID);
 		tweet.addClass('highlighted');
@@ -67,6 +68,7 @@ function highlight(e){
 
 		var highlightTweets = document.getElementById('tweets');
 		highlightTweets.append(tweet[0]);
+		console.log('done appending');
 	}
 }
 

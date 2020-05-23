@@ -7,6 +7,10 @@ from flask import current_app
 from urllib.request import urlopen
 import boto3
 import settings
+from datetime import datetime
+from dateutil.parser import parse
+import sqlite3
+from sqlite3 import Error
 
 application = Flask(__name__)
 app = application
@@ -27,6 +31,39 @@ aws_session = boto3.Session(
         aws_access_key_id=settings.AWS_PUBLIC_KEY,
         aws_secret_access_key=settings.AWS_SERVER_SECRET_KEY,
 )
+
+conn = None
+
+try:
+    conn = sqlite3.connect(':memory:')
+    print(sqlite3.version)
+except Error as e:
+    print(e)
+
+query = """CREATE TABLE IF NOT EXISTS TWEETS (
+          UserID varchar(255),
+          TweetID varchar(255) PRIMARY KEY,
+          CreatedAt datetime,
+          RetweetCount int,
+          FavoriteCount int
+        );"""
+
+conn.cursor().execute(query)
+
+def storeTweets(user, tweets):
+    with conn:
+        cur = conn.cursor()
+        tweet = None
+        #query = f"INSERT INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount) VALUES  ({tweet[0], %s, %s, %s, %s)"
+    
+        for tweet in tweets:
+            query = f"INSERT OR IGNORE INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount) VALUES('{user}', '{tweet[0]}', '{parse(tweet[1])}', {tweet[2]}, {tweet[3]})"
+            print(query)
+            cur.execute(query)
+        #connection.commit()
+        #connection.close()
+    print(conn.cursor().execute("select * from TWEETS"))
+
 
 def getCollectionID(username):
     dynamodb = aws_session.resource('dynamodb', region_name='us-west-2')
@@ -65,32 +102,77 @@ def profile():
     screen_name = resp.json()['screen_name']
     session['screen_name'] = screen_name 
     session['collection_id'] = getCollectionID(session['screen_name']) 
-    return render_template('profile.html', screen_name = screen_name) 
+    getAllTweets(session.get('screen_name'))
+    query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
+    #query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10"
+    tweets = []
+    with conn:
+        cur = conn.cursor()
+        cur.execute(query)
+        tweets = cur.fetchall()
+    tweets = [x[1] for x in tweets]
+    print(tweets)
+    return render_template('profile.html', screen_name=screen_name, tweets=tweets) 
 
 @app.route('/<username>')
 def userHighlightsView(username):
     collection_id = getCollectionID(username).split("-")[1]
     return render_template('highlightsview.html', screen_name=username, collection_id=collection_id)
 
-def getMoreTweets(user, lastTweetID):
+def getAllTweets(user):
+    allTweets = []
+    tweets = getMoreTweets(user, None, 200)
+    print('getting all tweets')
+    print(tweets)
+    loops = 1
+    while tweets:
+        allTweets = allTweets + tweets
+        lastTweetID = tweets[-1][0]
+        print(lastTweetID)
+        tweets  = getMoreTweets(user, lastTweetID, 200)
+        print(tweets)
+        loops = loops + 1
+
+    storeTweets(user, allTweets)
+    print(len(allTweets))
+    print(loops)
     
-    query = "statuses/user_timeline.json?screen_name=%s&count=10"%user
+
+def getMoreTweets(user, lastTweetID, count):
+    query = "statuses/user_timeline.json?screen_name=%s&count=%i&include_rts=false"%(user, count)
     
     if lastTweetID:
+        lastTweetID = int(lastTweetID) 
         print(lastTweetID)
-        print(lastTweetID+1)
         print(str(lastTweetID+1))
-        query+="&max_id=%s"%str(lastTweetID+1)
+        query+="&max_id=%s"%str(lastTweetID-1)
     tweets = twitter.get(query).json()
-    tweetIDs = [str(x['id']) for x in tweets]
-    return tweetIDs
+    tweetData = [(str(x['id']), str(x['created_at']), str(x['retweet_count']), str(x['favorite_count'])) for x in tweets]
+    return tweetData
 
 
 @app.route('/getTweets', methods=['POST'])
 def get_tweets():
     print('tweets requested')
-    tweetIDs = getMoreTweets(session.get('screen_name'), None)
-    print(tweetIDs)
+    sortType = request.form['sortType']
+    #tweets = getMoreTweets(session.get('screen_name'), None, 10)
+    #getAllTweets(session.get('screen_name'))
+    #tweetIDs = [x[0] for x in tweets]
+   
+    screen_name = session.get('screen_name')
+    if sortType == 'favorites':
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10"
+    elif sortType == 'retweets':
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY RetweetCount Desc LIMIT 10"
+    else:
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
+
+    tweets = []
+    with conn:
+        cur = conn.cursor()
+        cur.execute(query)
+        tweets = cur.fetchall()
+    tweetIDs = [x[1] for x in tweets]
     return jsonify(tweetIDs)
 
 
