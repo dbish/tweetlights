@@ -155,25 +155,30 @@ def getMoreTweets(user, lastTweetID, count):
 def get_tweets():
     print('tweets requested')
     sortType = request.form['sortType']
+    index = int(request.form['index'])
+    print('index: %i'%index)
     #tweets = getMoreTweets(session.get('screen_name'), None, 10)
     #getAllTweets(session.get('screen_name'))
     #tweetIDs = [x[0] for x in tweets]
    
     screen_name = session.get('screen_name')
     if sortType == 'favorites':
-        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10"
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10 OFFSET {index}"
     elif sortType == 'retweets':
-        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY RetweetCount Desc LIMIT 10"
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY RetweetCount Desc LIMIT 10 OFFSET {index}"
     else:
-        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10 OFFSET {index}"
 
     tweets = []
     with conn:
         cur = conn.cursor()
         cur.execute(query)
         tweets = cur.fetchall()
+    response = {}
     tweetIDs = [x[1] for x in tweets]
-    return jsonify(tweetIDs)
+    response['tweets'] = tweetIDs
+    response['index'] = index + len(tweetIDs)
+    return jsonify(response)
 
 
 @app.route('/saveHighlights', methods=['POST'])

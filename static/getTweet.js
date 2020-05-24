@@ -116,7 +116,7 @@ function unhighlight(e){
 
 function loadNewTweets(ids){
 	var previousTweets = document.getElementById('previousTweets');
-	$('#previousTweets').empty();
+	//$('#previousTweets').empty();
 	var i;
 	for (i in ids){
 		previousTweets.appendChild(createProfileTweet(ids[i]));

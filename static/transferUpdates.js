@@ -1,30 +1,41 @@
 var curSortType;
+var index = 10;
 
-function getMoreTweets(){
+function getTweets(idx){
 	console.log(curSortType)
+	console.log(idx);
 	$.post('/getTweets',{
-		'sortType':curSortType
+		'sortType':curSortType,
+		'index':idx
 	}).done(function(response){
 		console.log(response);
-		loadNewTweets(response);
+		loadNewTweets(response['tweets']);
+		index = response['index'];
 	}).fail(function(){
 		console.log('could not contact server');
 	});
 }
 
+function getMoreTweets(){
+	getTweets(index);
+}
+
 function sortByRetweets(){
+	$('#previousTweets').empty();
 	curSortType = 'retweets';
-	getMoreTweets();
+	getTweets(0);
 }
 
 function sortByFavorites(){
+	$('#previousTweets').empty();
 	curSortType = 'favorites';
-	getMoreTweets();
+	getTweets(0);
 }
 
 function sortByRecency(){
+	$('#previousTweets').empty();
 	curSortType = 'recency';
-	getMoreTweets();
+	getTweets(0);
 }
 
 function saveHighlights(){
