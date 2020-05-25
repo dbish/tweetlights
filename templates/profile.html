@@ -26,6 +26,7 @@
 <div class="container">
 	<div class="row">
 		<h1>@{{screen_name}}</h1>
+		<a href="{{url_for('userHighlightsView', username=screen_name)}}" target="_blank">[public page]</a>
 	</div>
 	<div class="row">
 		<div class="col">
@@ -48,9 +49,10 @@
 			<div id="searchTweet">
 			</div>
 			<h2>Browse</h2>
-			<button onclick="sortByRetweets()" type="button" class="btn btn-primary">Retweets</button>
-			<button onclick="sortByFavorites()" type="button" class="btn btn-primary">Favorites</button>
-			<button onclick="sortByRecency()" type="button" class="btn btn-primary">Recency</button>
+			<button onclick="sortByScore()" type="button" id="scoreButton" class="active btn btn-outline-dark" aria-pressed="true">Recommended</button>
+			<button onclick="sortByRetweets()" type="button" id="retweetsButton" class="btn btn-outline-dark">Retweets</button>
+			<button onclick="sortByFavorites()" type="button" id="favoritesButton" class="btn btn-outline-dark">Favorites</button>
+			<button onclick="sortByRecency()" type="button" id="recencyButton" class="btn btn-outline-dark">Recency</button>
 			<div id="previousTweets">
 			</div>
 			<button onclick="getMoreTweets()" type="button" class="btn btn-primary">Load More</button>

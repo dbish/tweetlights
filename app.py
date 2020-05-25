@@ -7,10 +7,11 @@ from flask import current_app
 from urllib.request import urlopen
 import boto3
 import settings
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.parser import parse
 import sqlite3
 from sqlite3 import Error
+from math import exp
 
 application = Flask(__name__)
 app = application
@@ -45,7 +46,8 @@ query = """CREATE TABLE IF NOT EXISTS TWEETS (
           TweetID varchar(255) PRIMARY KEY,
           CreatedAt datetime,
           RetweetCount int,
-          FavoriteCount int
+          FavoriteCount int,
+          Score real
         );"""
 
 conn.cursor().execute(query)
@@ -56,9 +58,12 @@ def storeTweets(user, tweets):
         tweet = None
         #query = f"INSERT INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount) VALUES  ({tweet[0], %s, %s, %s, %s)"
     
+        today = date.today()
         for tweet in tweets:
-            query = f"INSERT OR IGNORE INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount) VALUES('{user}', '{tweet[0]}', '{parse(tweet[1])}', {tweet[2]}, {tweet[3]})"
-            print(query)
+            created = parse(tweet[1])
+            age = (today - created.date()).days
+            score = round((int(tweet[2])+int(tweet[3]))*exp(age/3000), 2)
+            query = f"INSERT OR IGNORE INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount, Score) VALUES('{user}', '{tweet[0]}', '{created}', {tweet[2]}, {tweet[3]}, {score})"
             cur.execute(query)
         #connection.commit()
         #connection.close()
@@ -103,7 +108,8 @@ def profile():
     session['screen_name'] = screen_name 
     session['collection_id'] = getCollectionID(session['screen_name']) 
     getAllTweets(session.get('screen_name'))
-    query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
+    #query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
+    query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY Score Desc LIMIT 10"
     #query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10"
     tweets = []
     with conn:
@@ -166,8 +172,11 @@ def get_tweets():
         query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10 OFFSET {index}"
     elif sortType == 'retweets':
         query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY RetweetCount Desc LIMIT 10 OFFSET {index}"
-    else:
+    elif sortType == 'recency':
         query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10 OFFSET {index}"
+    else:
+        query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY Score Desc LIMIT 10 OFFSET {index}"
+
 
     tweets = []
     with conn:
