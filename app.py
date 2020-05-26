@@ -67,10 +67,9 @@ def storeTweets(user, tweets):
             cur.execute(query)
         #connection.commit()
         #connection.close()
-    print(conn.cursor().execute("select * from TWEETS"))
 
 
-def getCollectionID(username):
+def getCollectionInfo(username):
     dynamodb = aws_session.resource('dynamodb', region_name='us-west-2')
     table = dynamodb.Table('tweetlights_users');
     response = table.get_item(
@@ -78,25 +77,37 @@ def getCollectionID(username):
                 'userid':username
                 }
             )
+    tweets = []
+
     if 'Item' in response:
         if 'collectionid' in response['Item']:
-            return response['Item']['collectionid']
-    
-    response = twitter.post('collections/create.json?name=tweetlights.com')
-    collectionID = response.json()['response']['timeline_id']
+            collectionID = response['Item']['collectionid']
+            response = twitter.get('collections/entries.json?id=%s'%collectionID)
+            try:
+                tweets = list(response.json()['objects']['tweets'].keys())
+                print(tweets)
+            except:
+                print('missing tweets')
+            #tweets = response.json()['tweets'].keys()
+    else:
+        response = twitter.post('collections/create.json?name=tweetlights.com')
+        collectionID = response.json()['response']['timeline_id']
 
-    response = table.put_item(
-            Item={
-                'userid':username,
-                'collectionid':collectionID
-                }
-            )
-    return collectionID
+        response = table.put_item(
+                Item={
+                    'userid':username,
+                    'collectionid':collectionID
+                    }
+                )
+    return collectionID, tweets
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
+@app.route('/favicon.ico')
+def favicon():
+    return 'no favicon'
 
 @app.route("/profile")
 def profile():
@@ -106,7 +117,7 @@ def profile():
     assert resp.ok
     screen_name = resp.json()['screen_name']
     session['screen_name'] = screen_name 
-    session['collection_id'] = getCollectionID(session['screen_name']) 
+    session['collection_id'], collectionTweets = getCollectionInfo(session['screen_name']) 
     getAllTweets(session.get('screen_name'))
     #query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
     query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY Score Desc LIMIT 10"
@@ -117,31 +128,26 @@ def profile():
         cur.execute(query)
         tweets = cur.fetchall()
     tweets = [x[1] for x in tweets]
-    print(tweets)
-    return render_template('profile.html', screen_name=screen_name, tweets=tweets) 
+    return render_template('profile.html', screen_name=screen_name, tweets=tweets, collection=collectionTweets) 
 
 @app.route('/<username>')
 def userHighlightsView(username):
-    collection_id = getCollectionID(username).split("-")[1]
-    return render_template('highlightsview.html', screen_name=username, collection_id=collection_id)
+    collection_id = getCollectionInfo(username)[0].split("-")[1]
+    url = f'http://twitter.com/{username}/timelines/{collection_id}'
+    return redirect(url, code=302)
+    #return render_template('highlightsview.html', screen_name=username, collection_id=collection_id)
 
 def getAllTweets(user):
     allTweets = []
     tweets = getMoreTweets(user, None, 200)
-    print('getting all tweets')
-    print(tweets)
     loops = 1
     while tweets:
         allTweets = allTweets + tweets
         lastTweetID = tweets[-1][0]
-        print(lastTweetID)
         tweets  = getMoreTweets(user, lastTweetID, 200)
-        print(tweets)
         loops = loops + 1
 
     storeTweets(user, allTweets)
-    print(len(allTweets))
-    print(loops)
     
 
 def getMoreTweets(user, lastTweetID, count):
@@ -149,8 +155,6 @@ def getMoreTweets(user, lastTweetID, count):
     
     if lastTweetID:
         lastTweetID = int(lastTweetID) 
-        print(lastTweetID)
-        print(str(lastTweetID+1))
         query+="&max_id=%s"%str(lastTweetID-1)
     tweets = twitter.get(query).json()
     tweetData = [(str(x['id']), str(x['created_at']), str(x['retweet_count']), str(x['favorite_count'])) for x in tweets]
@@ -159,10 +163,8 @@ def getMoreTweets(user, lastTweetID, count):
 
 @app.route('/getTweets', methods=['POST'])
 def get_tweets():
-    print('tweets requested')
     sortType = request.form['sortType']
     index = int(request.form['index'])
-    print('index: %i'%index)
     #tweets = getMoreTweets(session.get('screen_name'), None, 10)
     #getAllTweets(session.get('screen_name'))
     #tweetIDs = [x[0] for x in tweets]
@@ -192,16 +194,32 @@ def get_tweets():
 
 @app.route('/saveHighlights', methods=['POST'])
 def save_highlights():
-    updatedHighlights = json.loads(request.form['data'])
+    addedHighlights = json.loads(request.form['add'])
+    removedHighlights = json.loads(request.form['remove'])
     collectionID = session['collection_id']
-    print('collectionid: %s'%collectionID)
     username = session['screen_name']
-    print(updatedHighlights)
-    print(updatedHighlights[0])
-    query = 'collections/entries/add.json?tweet_id=%s&id=%s'%(updatedHighlights[0], collectionID)
-    print(query)
-    resp = twitter.post(query)
-    print(resp.json())
+    if len(addedHighlights) > 0 or len(removedHighlights) > 0:
+        data = {}
+        data['id'] = collectionID
+        changes = []
+        for tweet in addedHighlights:
+            change = {}
+            change['op'] = 'add'
+            change['tweet_id'] = tweet
+            changes.append(change)
+
+        for tweet in removedHighlights:
+            change = {}
+            change['op'] = 'remove'
+            change['tweet_id'] = tweet
+            changes.append(change)
+
+        data['changes'] = changes
+
+        #query = 'collections/entries/add.json?tweet_id=%s&id=%s'%(updatedHighlights[0], collectionID)
+        query = 'collections/entries/curate.json?'
+        data = json.dumps(data)
+        resp = twitter.post(query, data)
     return jsonify('ok')
 
 @app.route('/logout')

@@ -1,4 +1,6 @@
 var highlights = new Set() 
+var highlightsToAdd = new Set()
+var highlightsToRemove = new Set()
 
 function getTweet(){
 	var tweetID = document.getElementById('tweetID').value;
@@ -8,6 +10,8 @@ function getTweet(){
 }
 
 function clearUnsavedHighlights(){
+	highlightsToRemove.clear();
+	highlightsToAdd.clear();
 	$(".unsaved").each(function(){
 		if ($(this).hasClass('unhighlighted')){
 			$(this).remove();
@@ -48,6 +52,7 @@ function highlight(e){
 
 	} else {
 		highlights.add(tweetID);
+		highlightsToAdd.add(tweetID);
 		//var tweet = $('#wrapper-'+tweetID).clone();
 		var tweet = $(createProfileTweet(tweetID));
 		var newID = 'wrapper-'+tweetID+'-highlighted';
@@ -76,6 +81,7 @@ function undodelete(e){
 	var tweetID = e.target.getAttribute('tweetid');
 	var highlight = $('#wrapper-'+tweetID+'-highlighted')
 	highlights.add(tweetID);
+	highlightsToRemove.delete(tweetID);
 	highlight.removeClass('unsaved');
 	highlight.addClass('highlighted');
 	highlight.removeClass('unhighlighted');
@@ -98,7 +104,9 @@ function unhighlight(e){
 	$('#wrapper-'+tweetID+'-button').show();
 	if (highlight.hasClass('unsaved')){
 		highlight.remove();
+		highlightsToAdd.delete(tweetID);
 	}else{
+		highlightsToRemove.add(tweetID);
 		highlight.addClass('unhighlighted');
 		highlight.removeClass('highlighted');
 		highlight.addClass('unsaved');
@@ -114,14 +122,15 @@ function unhighlight(e){
 	}
 }
 
-function loadNewTweets(ids){
-	var previousTweets = document.getElementById('previousTweets');
+function loadTweets(ids, div){
+	var tweetDiv = document.getElementById(div);
 	//$('#previousTweets').empty();
 	var i;
 	for (i in ids){
-		previousTweets.appendChild(createProfileTweet(ids[i]));
+		tweetDiv.appendChild(createProfileTweet(ids[i]));
 		console.log(ids[i]);
 	}
 	//twttr.widgets.load("#previousTweets");
 }
+
 

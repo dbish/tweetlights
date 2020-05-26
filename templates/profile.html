@@ -22,11 +22,12 @@
 <script src="{{url_for('static', filename='getTweet.js')}}"></script>
 <script>
 	var startingTweets = {{ tweets|tojson}};
+	var collectionTweets = {{ collection|tojson}};
 </script>
 <div class="container">
 	<div class="row">
-		<h1>@{{screen_name}}</h1>
-		<a href="{{url_for('userHighlightsView', username=screen_name)}}" target="_blank">[public page]</a>
+		<h1>tweetlights.com/{{screen_name}}</h1>
+		<a href="{{url_for('userHighlightsView', username=screen_name)}}" target="_blank">public view</a>
 	</div>
 	<div class="row">
 		<div class="col">

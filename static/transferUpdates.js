@@ -9,7 +9,7 @@ function getTweets(idx){
 		'index':idx
 	}).done(function(response){
 		console.log(response);
-		loadNewTweets(response['tweets']);
+		loadTweets(response['tweets'], 'previousTweets');
 		index = response['index'];
 	}).fail(function(){
 		console.log('could not contact server');
@@ -58,7 +58,10 @@ function makeActive(id){
 
 function saveHighlights(){
 	$.post('/saveHighlights', {
-		data:JSON.stringify(Array.from(highlights))
+
+		//data:JSON.stringify(Array.from(highlights)),
+		'add':JSON.stringify(Array.from(highlightsToAdd)),
+		'remove':JSON.stringify(Array.from(highlightsToRemove))
 	}).done(function(response){
 		clearUnsavedHighlights();
 	}).fail(function(){
@@ -69,6 +72,7 @@ function saveHighlights(){
 window.onload = function(){
 	//loadTweets();
 	curSortType = 'recency';
-	loadNewTweets(startingTweets);
+	loadTweets(startingTweets, 'previousTweets');
+	loadTweets(collectionTweets, 'tweets');
 };
 
