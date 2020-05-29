@@ -1,136 +1,173 @@
 var highlights = new Set() 
 var highlightsToAdd = new Set()
 var highlightsToRemove = new Set()
+var tweetsState = {};
 
 function getTweet(){
 	var tweetID = document.getElementById('tweetID').value;
 	var searchTweet = document.getElementById('searchTweet');
 	searchTweet.removeChild(searchTweet.firstChild)
-	searchTweet.appendChild(createProfileTweet(tweetID));
+	if (!(tweetID in tweetsState)){
+		tweetsState[tweetID] = "~highlighted_saved";
+	}
+	searchTweet.appendChild(createBrowseT(tweetID));
 }
 
 function clearUnsavedHighlights(){
 	highlightsToRemove.clear();
 	highlightsToAdd.clear();
-	$(".unsaved").each(function(){
+	$(".highlightT.unsaved").each(function(){
+		var tweetID = $(this).find('.tweet').attr('tweetid');
 		if ($(this).hasClass('unhighlighted')){
+			tweetsState[tweetID] = "~highlighted_saved"; 
 			$(this).remove();
+
 		}else{
-			$(this).removeClass('unsaved');
+	//		$(this).removeClass('unsaved');
+			tweetsState[tweetID] = "highlighted_saved"; 
 		}
+		updateClasses(tweetID);
 	});
 }
 
-function createProfileTweet(id){
+function createTweet(id){
 	var tweet = document.createElement("div");
-	tweet.setAttribute('class', 'tweet');
-	tweet.setAttribute('id', id);
+	$(tweet).addClass('tweet');
+	$(tweet).addClass(id);
+	tweet.setAttribute('tweetid', id);
 	twttr.widgets.createTweet(id, tweet);
-	var tweetWrapper = document.createElement("div");
-	tweetWrapper.appendChild(tweet);
-	tweetWrapper.setAttribute('class', 'shadow p3 mb-5 bg-white rounded');
-	tweetWrapper.setAttribute('id', 'wrapper-'+id);
-	var button = document.createElement("button");
-	button.setAttribute('class', 'btn btn-primary btn-sm');
-	button.setAttribute('tweetID', id);
-	button.setAttribute('id', 'wrapper-'+id+"-button");
-	button.textContent = "+ highlight";
-	//button.addEventListener('click', function () {
-	//	highlightTweet('wrapper-'+id); 
-	//}, false);
-	button.addEventListener('click', highlight, false);
-	tweetWrapper.appendChild(button);
+	return tweet;
+}
+
+
+
+function addClicked(e){
+	var button = e.target;
+	var wrapper = $(button).parent();
+	var tweetID = $(wrapper).find('.tweet').attr('tweetid');
+
+	switch(tweetsState[tweetID]){
+		case "~highlighted_saved":
+			tweetsState[tweetID] = "highlighted_~saved";
+			document.getElementById('tweets').appendChild(createHighlightT(tweetID));
+			highlightsToAdd.add(tweetID);
+			break;
+		case "~highlighted_~saved":
+			tweetsState[tweetID] = "highlighted_saved";
+			highlightsToRemove.delete(tweetID);
+			break;
+
+	}
+	updateClasses(tweetID);
+
+}
+
+function removeClicked(e){
+	var button = e.target;
+	var wrapper = $(button).parent();
+	var tweetID = $(wrapper).find('.tweet').attr('tweetid');
+
+	switch(tweetsState[tweetID]){
+		case "highlighted_saved":
+			tweetsState[tweetID] = "~highlighted_~saved";
+			highlightsToRemove.add(tweetID);
+			break;
+		case "highlighted_~saved":
+			tweetsState[tweetID] = "~highlighted_saved";
+			highlightsToAdd.delete(tweetID);
+			wrapper.remove();
+			break;
+	}
+	updateClasses(tweetID);
+}
+
+function updateClasses(tweetID){
+	$('.'+tweetID).each(function(){
+		var wrapper = $(this).parent();
+		wrapper.removeClass("highlighted unhighlighted unsaved");
+		switch(tweetsState[tweetID]){
+			case "highlighted_saved":
+				wrapper.addClass('highlighted');
+				break;
+			case "highlighted_~saved":
+				wrapper.addClass('highlighted unsaved');
+				break;
+			case "~highlighted_~saved":
+				wrapper.addClass('unhighlighted unsaved');
+				break;
+		}
+		
+	});
+}
+
+function createTweetWrapper(id){
+	var wrapper = document.createElement('div');
+
+	var tweet = createTweet(id);
+
+	var addButton = document.createElement('button');
+	addButton.textContent = 'highlight';
+	$(addButton).addClass('addButton btn btn-primary btn-sm');
+	addButton.addEventListener('click', addClicked, false);
+
+	wrapper.appendChild(tweet);
+	wrapper.appendChild(addButton);
+	$(wrapper).addClass('shadow p3 mb-5 bg-white rounded')
+
+	switch(tweetsState[id]){
+		case "highlighted_saved":
+			$(wrapper).addClass('highlighted');
+			break;
+		case "highlighted_~saved":
+			$(wrapper).addClass('highlighted unsaved');
+			break;
+		case "~highlighted_~saved":
+			$(wrapper).addClass('unhighlighted unsaved');
+			break;
+	}
+
+	return wrapper;
+}
+
+function createHighlightT(tweetID){
+	var tweetWrapper = createTweetWrapper(tweetID); 
+
+	var removeButton = document.createElement('button');
+	removeButton.textContent = 'unhighlight';
+	removeButton.addEventListener('click', removeClicked, false);
+	$(removeButton).addClass('removeButton btn btn-outline-primary btn-sm');
+
+	tweetWrapper.appendChild(removeButton);
+	$(tweetWrapper).addClass('highlightT');
+
 	return tweetWrapper;
 }
 
-function highlight(e){
-	var button = e.target;
-	var tweetID = button.getAttribute('tweetid');
-	console.log(tweetID);
-	if (highlights.has(tweetID)){
-		console.log('already highlighted');
-
-	} else {
-		highlights.add(tweetID);
-		highlightsToAdd.add(tweetID);
-		//var tweet = $('#wrapper-'+tweetID).clone();
-		var tweet = $(createProfileTweet(tweetID));
-		var newID = 'wrapper-'+tweetID+'-highlighted';
-		tweet.attr('id', newID);
-		tweet.addClass('highlighted');
-		tweet.addClass('unsaved');
-		tweet.find('.btn').remove();
-
-		$("#wrapper-"+tweetID+"-button").hide();
-
-		var button = document.createElement('button');
-		button.setAttribute('class', 'btn btn-primary btn-sm');
-		button.setAttribute('id', newID+'-button');
-		button.setAttribute('tweetID', tweetID);
-		button.textContent = 'remove -';
-		button.addEventListener('click', unhighlight, false);
-		tweet.append(button);
-
-		var highlightTweets = document.getElementById('tweets');
-		highlightTweets.append(tweet[0]);
-		console.log('done appending');
-	}
+function createBrowseT(tweetID){
+	var tweetWrapper = createTweetWrapper(tweetID);
+	return tweetWrapper;
 }
 
-function undodelete(e){
-	var tweetID = e.target.getAttribute('tweetid');
-	var highlight = $('#wrapper-'+tweetID+'-highlighted')
-	highlights.add(tweetID);
-	highlightsToRemove.delete(tweetID);
-	highlight.removeClass('unsaved');
-	highlight.addClass('highlighted');
-	highlight.removeClass('unhighlighted');
-	highlight.find('.btn').remove();
-
-	var button = document.createElement('button');
-	button.setAttribute('class', 'btn btn-primary btn-sm');
-	button.setAttribute('id', 'wrapper-'+tweetID+'-highlighted-button');
-	button.setAttribute('tweetID', tweetID);
-	button.textContent = 'remove -';
-	button.addEventListener('click', unhighlight, false);
-	highlight.append(button);
-
-}
-
-function unhighlight(e){
-	var tweetID = e.target.getAttribute('tweetid');
-	highlights.delete(tweetID);
-	var highlight = $('#wrapper-'+tweetID+'-highlighted')
-	$('#wrapper-'+tweetID+'-button').show();
-	if (highlight.hasClass('unsaved')){
-		highlight.remove();
-		highlightsToAdd.delete(tweetID);
-	}else{
-		highlightsToRemove.add(tweetID);
-		highlight.addClass('unhighlighted');
-		highlight.removeClass('highlighted');
-		highlight.addClass('unsaved');
-		highlight.find('.btn').remove();
-		var button = document.createElement('button');
-		button.setAttribute('class', 'btn btn-primary btn-sm');
-		button.setAttribute('id', 'wrapper-'+tweetID+'-highlighted-button');
-		button.setAttribute('tweetID', tweetID);
-		button.textContent = 'undo';
-		button.addEventListener('click', undodelete, false);
-		highlight.append(button);
-		
+function loadHighlightTweets(ids, div){
+	var tweetDiv = document.getElementById(div);
+	var i;
+	for (i in ids){
+		tweetsState[ids[i]] = "highlighted_saved";
+		tweetDiv.appendChild(createHighlightT(ids[i]));
 	}
+
+
 }
 
 function loadTweets(ids, div){
 	var tweetDiv = document.getElementById(div);
-	//$('#previousTweets').empty();
 	var i;
 	for (i in ids){
-		tweetDiv.appendChild(createProfileTweet(ids[i]));
-		console.log(ids[i]);
+		if (!(ids[i] in tweetsState)){
+			tweetsState[ids[i]] = "~highlighted_saved";
+		}
+		tweetDiv.appendChild(createBrowseT(ids[i]));
 	}
-	//twttr.widgets.load("#previousTweets");
 }
 
 

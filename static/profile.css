@@ -1,11 +1,23 @@
-.highlighted.unsaved {
+.highlightT.highlighted.unsaved {
 	border-color: white white white green;
 	border-width: 5px;
 	border-style: solid;
 }
 
-.unhighlighted.unsaved {
+.highlightT.unhighlighted.unsaved {
 	border-color: white white white red;
 	border-width:5px;
 	border-style:solid;
+}
+
+.removeButton {
+	float: right;
+}
+
+.highlighted > .addButton {
+	visibility:hidden;
+}
+
+.unhighlighted > .removeButton {
+	visibility:hidden;
 }

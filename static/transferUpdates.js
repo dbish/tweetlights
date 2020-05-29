@@ -72,7 +72,7 @@ function saveHighlights(){
 window.onload = function(){
 	//loadTweets();
 	curSortType = 'recency';
+	loadHighlightTweets(collectionTweets, 'tweets');
 	loadTweets(startingTweets, 'previousTweets');
-	loadTweets(collectionTweets, 'tweets');
 };
 
