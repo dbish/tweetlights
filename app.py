@@ -1,4 +1,4 @@
-from flask import jsonify, Flask, render_template, request, redirect, url_for, session
+from flask import jsonify, Flask, render_template, request, redirect, url_for, session, flash
 from flask_socketio import SocketIO, emit
 import os
 from flask_dance.contrib.twitter import make_twitter_blueprint, twitter
@@ -85,7 +85,6 @@ def getCollectionInfo(username):
             response = twitter.get('collections/entries.json?id=%s'%collectionID)
             try:
                 tweets = list(response.json()['objects']['tweets'].keys())
-                print(tweets)
             except:
                 print('missing tweets')
             #tweets = response.json()['tweets'].keys()
@@ -119,9 +118,7 @@ def profile():
     session['screen_name'] = screen_name 
     session['collection_id'], collectionTweets = getCollectionInfo(session['screen_name']) 
     getAllTweets(session.get('screen_name'))
-    #query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY CreatedAt Desc LIMIT 10"
     query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY Score Desc LIMIT 10"
-    #query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY FavoriteCount Desc LIMIT 10"
     tweets = []
     with conn:
         cur = conn.cursor()
@@ -132,6 +129,8 @@ def profile():
 
 @app.route('/<username>')
 def userHighlightsView(username):
+    if not twitter.authorized:
+        return redirect(url_for("twitter.login"))
     collection_id = getCollectionInfo(username)[0].split("-")[1]
     url = f'http://twitter.com/{username}/timelines/{collection_id}'
     return redirect(url, code=302)
@@ -163,6 +162,8 @@ def getMoreTweets(user, lastTweetID, count):
 
 @app.route('/getTweets', methods=['POST'])
 def get_tweets():
+    if not twitter.authorized:
+        return redirect(url_for("twitter.login"))
     sortType = request.form['sortType']
     index = int(request.form['index'])
     #tweets = getMoreTweets(session.get('screen_name'), None, 10)
@@ -194,6 +195,8 @@ def get_tweets():
 
 @app.route('/saveHighlights', methods=['POST'])
 def save_highlights():
+    if not twitter.authorized:
+        return redirect(url_for("twitter.login"))
     addedHighlights = json.loads(request.form['add'])
     removedHighlights = json.loads(request.form['remove'])
     collectionID = session['collection_id']
@@ -225,8 +228,13 @@ def save_highlights():
 @app.route('/logout')
 def logout():
     session.pop('screen_name', None)
+    query = "oauth/invalidate_token.json"
+    #query = f"oauth/invalidate_token.json?access_token={blueprint.token['oauth_token']}"
+
+    resp = twitter.post(query)
     flash('You were signed out')
-    return redirect(request.referrer or url_for('index'))
+    del blueprint.token
+    return redirect(url_for('home'))
 
 if __name__=='__main__':
     socketio.run(app, host='0.0.0.0', port=80)
