@@ -222,7 +222,7 @@ def save_highlights():
         query = 'collections/entries/curate.json?'
         data = json.dumps(data)
         resp = twitter.post(query, data)
-    return jsonify('ok')
+    return jsonify('updates saved')
 
 @app.route('/logout')
 def logout():

@@ -56,6 +56,22 @@ function makeActive(id){
 	$(id).addClass('active');
 }
 
+function addFlash(text){
+	var flashes = $('#flashes');
+	var newFlash = $(document.createElement('div'));
+	newFlash.addClass('alert alert-info alert-dismissable fade show');
+	newFlash.attr('role', 'alert');
+	newFlash.append(text);
+	var closeButton = $(document.createElement('button'));
+	closeButton.attr('type', 'button');
+	closeButton.addClass('close');
+	closeButton.attr('data-dismiss', 'alert');
+	closeButton.attr('aria-label', 'Close');
+	closeButton.append('<span aria-hidden="true">&times;</span>');
+	newFlash.append(closeButton);
+	flashes.append(newFlash);
+}
+
 function saveHighlights(){
 	$.post('/saveHighlights', {
 
@@ -63,6 +79,7 @@ function saveHighlights(){
 		'add':JSON.stringify(Array.from(highlightsToAdd)),
 		'remove':JSON.stringify(Array.from(highlightsToRemove))
 	}).done(function(response){
+		addFlash('saved');
 		clearUnsavedHighlights();
 	}).fail(function(){
 		console.log('failure in saving from server');
