@@ -6,6 +6,7 @@ import json
 from flask import current_app
 from urllib.request import urlopen
 import boto3
+from botocore.exceptions import ClientError
 import settings
 from datetime import datetime, date
 from dateutil.parser import parse
@@ -56,7 +57,6 @@ def storeTweets(user, tweets):
     with conn:
         cur = conn.cursor()
         tweet = None
-        #query = f"INSERT INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount) VALUES  ({tweet[0], %s, %s, %s, %s)"
     
         today = date.today()
         for tweet in tweets:
@@ -65,8 +65,6 @@ def storeTweets(user, tweets):
             score = round((int(tweet[2])+int(tweet[3]))*exp(age/3000), 2)
             query = f"INSERT OR IGNORE INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount, Score) VALUES('{user}', '{tweet[0]}', '{created}', {tweet[2]}, {tweet[3]}, {score})"
             cur.execute(query)
-        #connection.commit()
-        #connection.close()
 
 
 def getCollectionInfo(username):
@@ -86,8 +84,7 @@ def getCollectionInfo(username):
             try:
                 tweets = list(response.json()['objects']['tweets'].keys())
             except:
-                print('missing tweets')
-            #tweets = response.json()['tweets'].keys()
+                tweets = []
     else:
         response = twitter.post('collections/create.json?name=tweetlights.com')
         collectionID = response.json()['response']['timeline_id']
@@ -98,11 +95,13 @@ def getCollectionInfo(username):
                     'collectionid':collectionID
                     }
                 )
+        flash('New tweetlights collection created. Now add your highlights!')
     return collectionID, tweets
 
 @app.route('/')
 def home():
     return render_template('index.html')
+
 
 @app.route('/favicon.ico')
 def favicon():
@@ -235,6 +234,30 @@ def logout():
     flash('You were signed out')
     del blueprint.token
     return redirect(url_for('home'))
+
+@app.route('/delete')
+def delete():
+    if not twitter.authorized:
+        return redirect(url_for("twitter.login"))
+    #destroy collection
+    screen_name = session['screen_name']
+    collection_id = session['collection_id']
+    query=f"collections/destroy.json?id={collection_id}"
+    
+    #delete profile from dynamodb
+    dynamodb = aws_session.resource('dynamodb', region_name='us-west-2')
+    table = dynamodb.Table('tweetlights_users')
+    try:
+        response = table.delete_item(
+                Key={
+                    'userid':screen_name
+                    }
+                )
+    except ClientError as e:
+        print(e)
+
+    flash('profile deleted. sign in again to create a new tweetlights collection in the future.')
+    return redirect(url_for('logout'))
 
 if __name__=='__main__':
     socketio.run(app, host='0.0.0.0', port=80)
