@@ -98,6 +98,12 @@ function updateClasses(tweetID){
 		}
 		
 	});
+	if ((highlightsToAdd.size > 0) || (highlightsToRemove.size > 0)){
+		$('#saveButton').prop('disabled', false);	
+	}else{
+		$('#saveButton').prop('disabled', true);	
+	}
+
 }
 
 function createTweetWrapper(id){

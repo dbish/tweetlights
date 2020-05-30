@@ -91,5 +91,7 @@ window.onload = function(){
 	curSortType = 'recency';
 	loadHighlightTweets(collectionTweets, 'tweets');
 	loadTweets(startingTweets, 'previousTweets');
+	$('#saveButton').prop('disabled', true);
+
 };
 
