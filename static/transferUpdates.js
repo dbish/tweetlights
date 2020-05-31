@@ -86,6 +86,19 @@ function saveHighlights(){
 	});
 }
 
+function copyToClipboard(text){
+	console.log(text);
+	var copyText = document.getElementById('externalLink');
+	console.log(copyText);
+	copyText.focus()
+	console.log(copyText.value);
+	copyText.setSelectionRange(0, copyText.value.length)
+	console.log(copyText.textContent);
+	console.log(copyText.value);
+	result = document.execCommand('copy');
+	console.log(result);
+}
+
 window.onload = function(){
 	//loadTweets();
 	curSortType = 'recency';

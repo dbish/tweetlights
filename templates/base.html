@@ -14,8 +14,11 @@
                 </span>
 		{% if screen_name is defined %}
 		<span class="navbar-text">
-			public tweetlights link (share this with others): <a href={{url_for('userHighlightsView', username=screen_name)}} target="_blank">tweetlights.com/{{screen_name}}</a>
-		<button type="button" class="btn btn-outline-light btn-sm">copy</button>
+			public tweetlights link (share this with others): <a href={{url_for('userHighlightsView', username=screen_name)}} target="_blank">
+				<input type="text" id="externalLink" value='tweetlights.com/{{screen_name}}' size={{screen_name|length + 15}} readonly>
+			</a>
+			<button id="copyButton" type="button" class="btn btn-outline-light btn-sm" 
+							      onclick="copyToClipboard('tweetlights.com/{{screen_name}}')">copy</button>
 		</span>
 		<span class="navbar-text">
 		<a href="{{url_for('logout')}}">logout</a>
