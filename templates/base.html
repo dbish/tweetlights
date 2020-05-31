@@ -12,11 +12,15 @@
                 <span class="navbar-text">
 			<a href="{{url_for('home')}}">tweetlights</a>
                 </span>
+		{% if screen_name is defined %}
 		<span class="navbar-text">
-			{% if screen_name is defined %}
-			<a href="{{url_for('logout')}}">logout</a>
-			{% endif %}
+			public tweetlights link (share this with others): <a href={{url_for('userHighlightsView', username=screen_name)}} target="_blank">tweetlights.com/{{screen_name}}</a>
+		<button type="button" class="btn btn-outline-light btn-sm">copy</button>
 		</span>
+		<span class="navbar-text">
+		<a href="{{url_for('logout')}}">logout</a>
+		</span>
+		{% endif %}
         </nav>
 	<div id="flashes">
 	{% with messages = get_flashed_messages() %}
@@ -41,6 +45,11 @@
 	<nav class="footer navbar navbar-light bg-light border-top border-secondary rounded border">
 		<span class="navbar-text">
 			about: tweetlights is a project in beta. i hope you like it 🙂. if you have any issues you can contact <a href="http://twitter.com/diamondbishop">@diamondbishop</a> or file an issue at <a href="http://github.com/dbish/tweetlights">github.com/dbish/tweetlights</a>. terms/license info are located there as well	
+		</span>
+		<span class="navbar-text">
+			{% if screen_name is defined %}
+			<a href="{{url_for('delete')}}" class="btn btn-outline-danger btn-sm">delete tweetlights profile</a>
+			{% endif %}
 		</span>
 	</nav>
 </body>

@@ -1,5 +1,4 @@
-from flask import jsonify, Flask, render_template, request, redirect, url_for, session, flash
-from flask_socketio import SocketIO, emit
+from flask import jsonify, Flask, render_template, request, redirect, url_for, session, flash, g
 import os
 from flask_dance.contrib.twitter import make_twitter_blueprint, twitter
 import json
@@ -27,35 +26,50 @@ blueprint = make_twitter_blueprint(
     redirect_url="/profile"
 )
 app.register_blueprint(blueprint, url_prefix="/login")
-socketio = SocketIO(app)
 
 aws_session = boto3.Session(
         aws_access_key_id=settings.AWS_PUBLIC_KEY,
         aws_secret_access_key=settings.AWS_SERVER_SECRET_KEY,
 )
 
-conn = None
+DATABASE = '/tmp/tweets.db'
 
-try:
-    conn = sqlite3.connect(':memory:')
-    print(sqlite3.version)
-except Error as e:
-    print(e)
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = sqlite3.connect(DATABASE)
+    return db
 
-query = """CREATE TABLE IF NOT EXISTS TWEETS (
-          UserID varchar(255),
-          TweetID varchar(255) PRIMARY KEY,
-          CreatedAt datetime,
-          RetweetCount int,
-          FavoriteCount int,
-          Score real
-        );"""
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
-conn.cursor().execute(query)
+def bootstrapDB():
+    try:
+        db = get_db()
+        print('connected')
+    except Error as e:
+        print(e)
+
+    query = """CREATE TABLE IF NOT EXISTS TWEETS (
+              UserID varchar(255),
+              TweetID varchar(255) PRIMARY KEY,
+              CreatedAt datetime,
+              RetweetCount int,
+              FavoriteCount int,
+              Score real
+            );"""
+
+    db.cursor().execute(query)
+    print('bootstrapped')
+
 
 def storeTweets(user, tweets):
-    with conn:
-        cur = conn.cursor()
+    db = get_db()
+    try:
+        cur = db.cursor()
         tweet = None
     
         today = date.today()
@@ -65,6 +79,9 @@ def storeTweets(user, tweets):
             score = round((int(tweet[2])+int(tweet[3]))*exp(age/3000), 2)
             query = f"INSERT OR IGNORE INTO TWEETS (UserID, TweetID, CreatedAt, RetweetCount, FavoriteCount, Score) VALUES('{user}', '{tweet[0]}', '{created}', {tweet[2]}, {tweet[3]}, {score})"
             cur.execute(query)
+        db.commit()
+    except Error as e:
+        print(e)
 
 
 def getCollectionInfo(username):
@@ -111,29 +128,29 @@ def favicon():
 def profile():
     if not twitter.authorized:
         return redirect(url_for("twitter.login"))
+    bootstrapDB()
     resp = twitter.get("account/settings.json")
-    assert resp.ok
     screen_name = resp.json()['screen_name']
     session['screen_name'] = screen_name 
     session['collection_id'], collectionTweets = getCollectionInfo(session['screen_name']) 
     getAllTweets(session.get('screen_name'))
     query = f"SELECT * FROM TWEETS WHERE UserID='{screen_name}' ORDER BY Score Desc LIMIT 10"
     tweets = []
-    with conn:
-        cur = conn.cursor()
+    db = get_db()
+    try:
+        cur = db.cursor()
         cur.execute(query)
         tweets = cur.fetchall()
+    except Error as e:
+        print(e)
     tweets = [x[1] for x in tweets]
     return render_template('profile.html', screen_name=screen_name, tweets=tweets, collection=collectionTweets) 
 
 @app.route('/<username>')
 def userHighlightsView(username):
-    if not twitter.authorized:
-        return redirect(url_for("twitter.login"))
     collection_id = getCollectionInfo(username)[0].split("-")[1]
     url = f'http://twitter.com/{username}/timelines/{collection_id}'
     return redirect(url, code=302)
-    #return render_template('highlightsview.html', screen_name=username, collection_id=collection_id)
 
 def getAllTweets(user):
     allTweets = []
@@ -165,9 +182,6 @@ def get_tweets():
         return redirect(url_for("twitter.login"))
     sortType = request.form['sortType']
     index = int(request.form['index'])
-    #tweets = getMoreTweets(session.get('screen_name'), None, 10)
-    #getAllTweets(session.get('screen_name'))
-    #tweetIDs = [x[0] for x in tweets]
    
     screen_name = session.get('screen_name')
     if sortType == 'favorites':
@@ -181,10 +195,13 @@ def get_tweets():
 
 
     tweets = []
-    with conn:
-        cur = conn.cursor()
+    db = get_db()
+    try:
+        cur = db.cursor()
         cur.execute(query)
         tweets = cur.fetchall()
+    except Error as e:
+        print(e)
     response = {}
     tweetIDs = [x[1] for x in tweets]
     response['tweets'] = tweetIDs
@@ -218,7 +235,6 @@ def save_highlights():
 
         data['changes'] = changes
 
-        #query = 'collections/entries/add.json?tweet_id=%s&id=%s'%(updatedHighlights[0], collectionID)
         query = 'collections/entries/curate.json?'
         data = json.dumps(data)
         resp = twitter.post(query, data)
@@ -228,7 +244,6 @@ def save_highlights():
 def logout():
     session.pop('screen_name', None)
     query = "oauth/invalidate_token.json"
-    #query = f"oauth/invalidate_token.json?access_token={blueprint.token['oauth_token']}"
 
     resp = twitter.post(query)
     flash('You were signed out')
@@ -239,6 +254,7 @@ def logout():
 def delete():
     if not twitter.authorized:
         return redirect(url_for("twitter.login"))
+
     #destroy collection
     screen_name = session['screen_name']
     collection_id = session['collection_id']
@@ -260,5 +276,5 @@ def delete():
     return redirect(url_for('logout'))
 
 if __name__=='__main__':
-    socketio.run(app, host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80)
 

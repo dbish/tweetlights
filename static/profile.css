@@ -25,3 +25,19 @@
 .unhighlighted > .removeButton {
 	visibility:hidden;
 }
+
+.alert {
+	width: 25%;
+	text-align: center;
+	margin-left: auto;
+	margin-right:auto;
+	margin-top: 10px;
+}
+
+#previousTweets{
+	min-height: 900px;
+}
+
+#flashes{
+	min-height: 80px;
+}

@@ -26,14 +26,10 @@
 </script>
 <div class="container">
 	<div class="row">
-		<h1>tweetlights.com/{{screen_name}}</h1>
-		<a href="{{url_for('userHighlightsView', username=screen_name)}}" target="_blank">public view</a>
-	</div>
-	<div class="row">
 		<div class="col">
-			<h2>Your Profile Highlights</h2>
+			<h2>Your Profile Highlights
 			<button onclick="saveHighlights()" id="saveButton" type="button" class="btn btn-primary">Save</button>
-			<a href="{{url_for('delete')}}" class="btn btn-danger">Delete Profile</a>
+			</h2>
 			<div id="tweets">
 			</div>
 		</div>
