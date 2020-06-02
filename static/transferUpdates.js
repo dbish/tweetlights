@@ -106,5 +106,13 @@ window.onload = function(){
 	loadTweets(startingTweets, 'previousTweets');
 	$('#saveButton').prop('disabled', true);
 
+	var tweetIDSearch = document.getElementById('tweetID');
+	tweetIDSearch.addEventListener("keyup", function(event){
+		if (event.keyCode === 13){
+			event.preventDefault();
+			document.getElementById('searchButton').click();
+		}
+	});
+
 };
 

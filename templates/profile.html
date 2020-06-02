@@ -27,33 +27,33 @@
 <div class="container">
 	<div class="row">
 		<div class="col">
-			<h2>Your Profile Highlights
-			<button onclick="saveHighlights()" id="saveButton" type="button" class="btn btn-primary">Save</button>
+			<h2>your <strong>tweet</strong> high<strong>lights</strong>
+			<button onclick="saveHighlights()" id="saveButton" type="button" class="btn btn-primary">save</button>
 			</h2>
 			<div id="tweets">
 			</div>
 		</div>
 		<div class="col">
-			<h2>Search by ID</h2>
+			<h2>search by id</h2>
 			<div class="input-group mb-3">
 				<div class="input-group-prepend">
 					<span class="input-group-text" id="basic-addon3">twitter.com/{{screen_name}}/status/</span>
 				</div>
 				<input type="text" class="form-control" id="tweetID" aria-describedby="basic-addon3">
 				<div class="input-group-append">
-				<button onclick="getTweet()" type="button" class="btn btn-primary">Add</button>
+				<button onclick="getTweet()" type="button" class="btn btn-primary" id="searchButton">find</button>
 				</div>
 			</div>
 			<div id="searchTweet">
 			</div>
-			<h2>Browse</h2>
-			<button onclick="sortByScore()" type="button" id="scoreButton" class="active btn btn-outline-dark" aria-pressed="true">Recommended</button>
-			<button onclick="sortByRetweets()" type="button" id="retweetsButton" class="btn btn-outline-dark">Retweets</button>
-			<button onclick="sortByFavorites()" type="button" id="favoritesButton" class="btn btn-outline-dark">Favorites</button>
-			<button onclick="sortByRecency()" type="button" id="recencyButton" class="btn btn-outline-dark">Recency</button>
+			<h2>browse</h2>
+			<button onclick="sortByScore()" type="button" id="scoreButton" class="active btn btn-outline-dark" aria-pressed="true">recommended</button>
+			<button onclick="sortByRetweets()" type="button" id="retweetsButton" class="btn btn-outline-dark">retweets</button>
+			<button onclick="sortByFavorites()" type="button" id="favoritesButton" class="btn btn-outline-dark">favorites</button>
+			<button onclick="sortByRecency()" type="button" id="recencyButton" class="btn btn-outline-dark">recency</button>
 			<div id="previousTweets">
 			</div>
-			<button onclick="getMoreTweets()" type="button" class="btn btn-primary">Load More</button>
+			<button onclick="getMoreTweets()" type="button" class="btn btn-primary">load more</button>
 		</div>
 	</div>
 </div>
