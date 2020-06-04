@@ -21,8 +21,8 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 
 blueprint = make_twitter_blueprint(
-    api_key ="YS0WnopsuCk49XgS38QnxaWVl",
-    api_secret="m77dm2DW37qjvuID3ut1Kh6TcLS3Aq9QTP6JyRNBKrRllArXoq",
+    api_key=settings.TWITTER_API_KEY,
+    api_secret=settings.TWITTER_SECRET_KEY,
     redirect_url="/profile"
 )
 app.register_blueprint(blueprint, url_prefix="/login")
