@@ -103,7 +103,7 @@ def getCollectionInfo(username):
             except:
                 tweets = []
     else:
-        response = twitter.post('collections/create.json?name=tweetlights.com')
+        response = twitter.post('collections/create.json?name=tweetlights.com&timeline_order=tweet_reverse_chron')
         collectionID = response.json()['response']['timeline_id']
 
         response = table.put_item(
