@@ -1,12 +1,43 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="jumbotron">
-	<h1 class="display-4">TweetLights</h1>
-	<p class="lead">Curate your best tweets in a single place</p>
+	<h1 class="display-4">tweetlights</h1>
+	<p class="lead">Highlight your best tweets in a single place</p>
 	<hr class="my-4">
-	<p>You tweet a lot, and potential followers need a quick way to get up to speed on who you are. Build your tweetlight profile here, highlighting your favorite or most liked tweets!</p>
+	<p>You tweet a lot, and potential followers need a quick way to get up to speed on who you are. Build your tweetlights profile here, highlighting your favorite or most liked tweets!</p>
 	<a href="{{url_for('twitter.login')}}">
 		<img alt="sign in with Twitter" src="{{url_for('static', filename='twitterbutton.png')}}">
 	</a>
 </div>
+<div>
+	<div class="row info bord">
+		<div class="col">
+			<h2>Login & Highlight</h2>
+			<p>No additional account required. Just use your twitter account to login. Filter and add the tweets that you want to your curated higlights collection.</p>
+		</div>
+		<div class="col">
+			<img src="{{url_for('static', filename='tweetlightsCurating.png')}}" class="img-fluid">
+		</div>
+	</div>
+	<div class="row info bord">
+		<div class="col">
+			<img src="{{url_for('static', filename='twitterProfile.png')}}" class="img-fluid">
+		</div>
+		<div class="col">
+			<h2>Link & Share</h2>
+			<p>Add your personal tweetlights link to your twitter profile. New followers will read up and engage with your highlighted tweets, allowing them to catch up on your key tweets and make the call to follow you.</p>
+		</div>
+	</div>
+	<div class="row info">
+		<div class="col">
+			<h2>Just The Highlights</h2>
+			<p>When anyone clicks on your tweetlights link, they stay put on twitter, viewing a native twitter collection. The tweetlights link simply routes them to the right location in an easy to read and share way.
+			</p>
+		</div>
+		<div class="col">
+			<img src="{{url_for('static', filename='collectionView.png')}}" class="img-fluid">
+		</div>
+	</div>
+</div>
+
 {% endblock %}

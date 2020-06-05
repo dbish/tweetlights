@@ -8,3 +8,18 @@
 body {
 	padding-top:70px;
 }
+
+.info.row {
+	padding: 50px;
+	margin: 20px;
+	font-size:x-large;
+}
+
+.info.row.bord {
+	border-style: none none solid;
+	border-color: #75DAFF;
+}
+
+.jumbotron{
+	font-size: x-large;
+}
