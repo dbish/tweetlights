@@ -1,4 +1,4 @@
-from flask import jsonify, Flask, render_template, request, redirect, url_for, session, flash, g
+from flask import jsonify, Flask, render_template, request, redirect, url_for, session, flash, g, send_from_directory
 import os
 from flask_dance.contrib.twitter import make_twitter_blueprint, twitter
 import json
@@ -122,7 +122,7 @@ def home():
 
 @app.route('/favicon.ico')
 def favicon():
-    return 'no favicon'
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon') 
 
 @app.route("/profile")
 def profile():
