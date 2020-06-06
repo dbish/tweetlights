@@ -10,10 +10,8 @@
 <body>
         <nav class="navbar navbar-dark bg-dark fixed-top">
                 <span class="navbar-text">
-			<img src="{{url_for('static', filename='favicon-32x32.png')}}"</img>
 			<a href="{{url_for('home')}}">
-				<img src="{{url_for('static', filename='tlLogo.png')}}"</img>
-				tweetlights
+				<img src="{{url_for('static', filename='tlLogo.png')}}" style="height:50px"></img>
 			</a>
                 </span>
 		{% if screen_name is defined %}
